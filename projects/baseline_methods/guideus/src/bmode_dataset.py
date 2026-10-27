@@ -295,10 +295,13 @@ class BModeDatasetV2(Dataset):
             "family_history": metadata["family_history"],
             "pct_cancer": metadata["pct_cancer"],
             "clinically_significant": metadata["clinically_significant"],
-            "all_cores_benign": metadata["all_cores_benign"]
+            "all_cores_benign": metadata["all_cores_benign"],
+            # core-location prompt ("pos" in model_kw.prompts), same metadata columns BModeDatasetV1 passes through
+            "base_apex_encoding": metadata["base_apex_encoding"],
+            "mid_lateral_encoding": metadata["mid_lateral_encoding"],
         }
-        
-        if self.output_fmt == 'pil': 
+
+        if self.output_fmt == 'pil':
             output["bmode"] = Image.fromarray(output["bmode"]).convert("RGB")
             output["prostate_mask"] = Image.fromarray(output["prostate_mask"])
             output["needle_mask"] = Image.fromarray(output["needle_mask"])

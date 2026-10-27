@@ -1,0 +1,270 @@
+{
+ "description": "Expected cohorts and model inputs of the lab core-level benchmark, computed with the benchmark loaders (see benchmark/README.md, \"Cohort and input checks\"). Counts and SHA-256 of sorted, newline-joined identifiers; digests are cohort-level means of the preprocessed inputs (no per-core values).",
+ "created": "2026-10-27",
+ "preprocessing": {
+  "image_size": 256,
+  "mask_size": 64,
+  "mean": [
+   0,
+   0,
+   0
+  ],
+  "std": [
+   1,
+   1,
+   1
+  ],
+  "flip_ud": false,
+  "crop_to_prostate": false,
+  "first_downsample_size": null
+ },
+ "data_files": {
+  "nct2013/metadata_with_approx_psa_density.csv": "1e146a1bb2a4f6f6ff37cc16dddf0206942350523aa555f842802e2e2746d8c4",
+  "nct2013/needle_mask.npy": "1585ed677ebbd7f5840d2d228b66f35cc382d422a7b4315a66f2a8145f6447cf"
+ },
+ "nct": {
+  "0": {
+   "val_cores": {
+    "n": 1336,
+    "sha256": "79cf0a6ecd151dc2afa8c60ce37aa73dbfde3751a66b727b96ec417956c5aabe"
+   },
+   "val_patients": {
+    "n": 139,
+    "sha256": "09918bf8679fb392db5b5ce95f9a95fa33742bf8b52d6f1b6e9e20dd00a298ef"
+   },
+   "train_patients": {
+    "n": 554,
+    "sha256": "195229b211de45d765920be92a0e1033a8bd73306fc448fe0ed043db00afe4f5"
+   },
+   "train_cores_after_filter": {
+    "n": 4334,
+    "sha256": "0d813484c36d4a2672a7d781fc4bc7fe87a99fcea31fb568d8679c2f5734ef9d"
+   },
+   "digest": {
+    "bmode_mean": 0.29534939,
+    "bmode_top_minus_bottom": 0.28439048,
+    "needle_fraction": 0.07080078,
+    "needle_centroid_y": 0.46754242,
+    "needle_centroid_x": 0.75457033,
+    "prostate_fraction": 0.43112585,
+    "prostate_centroid_y": 0.55523505,
+    "prostate_centroid_x": 0.66318664,
+    "needle_and_prostate_fraction": 0.05612987,
+    "prompt_age": 0.78373948,
+    "prompt_psa": 0.18966625,
+    "prompt_approx_psa_density": 0.18741061,
+    "prompt_base_apex_encoding": -0.01122754,
+    "prompt_mid_lateral_encoding": 0.02694611
+   }
+  },
+  "1": {
+   "val_cores": {
+    "n": 1302,
+    "sha256": "9850f60207e4ac77b90143ff1cadf76f8d7b490cba96edb2eec410eb77618cf0"
+   },
+   "val_patients": {
+    "n": 139,
+    "sha256": "61a6eaf5b69226205afdd48a2b54fa49c50152765a230ae5263e5511ddc8db66"
+   },
+   "train_patients": {
+    "n": 554,
+    "sha256": "db6b866a0c34ff603808c626bf4e4266ca7c20ec8bea0279194963a36f446cac"
+   },
+   "train_cores_after_filter": {
+    "n": 4391,
+    "sha256": "c39487bb95e16f8ba898a2c1bd30f34860e57202968bf836874a90e5ce330f5d"
+   },
+   "digest": {
+    "bmode_mean": 0.29263122,
+    "bmode_top_minus_bottom": 0.29564429,
+    "needle_fraction": 0.07080078,
+    "needle_centroid_y": 0.46754242,
+    "needle_centroid_x": 0.75457033,
+    "prostate_fraction": 0.42021383,
+    "prostate_centroid_y": 0.55319521,
+    "prostate_centroid_x": 0.66446362,
+    "needle_and_prostate_fraction": 0.05551518,
+    "prompt_age": 0.79401699,
+    "prompt_psa": 0.18162605,
+    "prompt_approx_psa_density": 0.18906892,
+    "prompt_base_apex_encoding": -0.02611367,
+    "prompt_mid_lateral_encoding": -0.00460829
+   }
+  },
+  "2": {
+   "val_cores": {
+    "n": 1317,
+    "sha256": "32db6b48adf9076e706cb0a8320d0a6602263f0ee956851523b7fed1d4d3e2df"
+   },
+   "val_patients": {
+    "n": 139,
+    "sha256": "260d6491387adb0ad2f5d52328d74f4ddcf54cb8cb92ea49305ac64fcdc36f7c"
+   },
+   "train_patients": {
+    "n": 554,
+    "sha256": "abcedef8d267f502ad184de4aaa8c9079fd7774069258135c4db6ffed05274ef"
+   },
+   "train_cores_after_filter": {
+    "n": 4398,
+    "sha256": "59e98209a83cdc7a46a6b57f6826c1ca40ea2a9b8f483ebd927013955efeb8b3"
+   },
+   "digest": {
+    "bmode_mean": 0.29713918,
+    "bmode_top_minus_bottom": 0.28277882,
+    "needle_fraction": 0.07080078,
+    "needle_centroid_y": 0.46754242,
+    "needle_centroid_x": 0.75457033,
+    "prostate_fraction": 0.41523278,
+    "prostate_centroid_y": 0.55697894,
+    "prostate_centroid_x": 0.66264867,
+    "needle_and_prostate_fraction": 0.05490773,
+    "prompt_age": 0.78223427,
+    "prompt_psa": 0.20733033,
+    "prompt_approx_psa_density": 0.21530942,
+    "prompt_base_apex_encoding": 0.00379651,
+    "prompt_mid_lateral_encoding": 0.02201974
+   }
+  },
+  "3": {
+   "val_cores": {
+    "n": 1328,
+    "sha256": "3baa200c7d302b4e784dabf1fe74ee8cfe5f0da2406f969d4462eb314d5799c8"
+   },
+   "val_patients": {
+    "n": 138,
+    "sha256": "7fdb64a21f54c2304af67923a1b57f42218031ff71ec89aad7218988ad0a454c"
+   },
+   "train_patients": {
+    "n": 555,
+    "sha256": "fea44ec87aa723d77111e8fd57cd969202df8a972e91a0d81b62217d655232d4"
+   },
+   "train_cores_after_filter": {
+    "n": 4426,
+    "sha256": "8c90111594516b28c7dac4e53c1dd18fcbed8e9e882f386dba69d8e506029b11"
+   },
+   "digest": {
+    "bmode_mean": 0.29743479,
+    "bmode_top_minus_bottom": 0.28715545,
+    "needle_fraction": 0.07080078,
+    "needle_centroid_y": 0.46754242,
+    "needle_centroid_x": 0.75457033,
+    "prostate_fraction": 0.43493505,
+    "prostate_centroid_y": 0.56912133,
+    "prostate_centroid_x": 0.6350995,
+    "needle_and_prostate_fraction": 0.05336421,
+    "prompt_age": 0.79816417,
+    "prompt_psa": 0.20724777,
+    "prompt_approx_psa_density": 0.20892068,
+    "prompt_base_apex_encoding": 0.0,
+    "prompt_mid_lateral_encoding": 0.01506024
+   }
+  },
+  "4": {
+   "val_cores": {
+    "n": 1324,
+    "sha256": "33cbb4de82f48a508317a6212984d6ee07022abd782a3c56980a549eed3f2aab"
+   },
+   "val_patients": {
+    "n": 138,
+    "sha256": "9b6c15e024b2ead460aacf9f0d3bdfb4d737fc004d3688f2fc905ba3d0ec5f69"
+   },
+   "train_patients": {
+    "n": 555,
+    "sha256": "0420af3b2f3951da68961fcfdb15e413306a1d4b71e41f44108b50ad9df6d5da"
+   },
+   "train_cores_after_filter": {
+    "n": 4367,
+    "sha256": "02b10fbf37eb2424badee85823487dc87c7d167c296dd89164ca432545b083bb"
+   },
+   "digest": {
+    "bmode_mean": 0.29464112,
+    "bmode_top_minus_bottom": 0.28606281,
+    "needle_fraction": 0.07080078,
+    "needle_centroid_y": 0.46754242,
+    "needle_centroid_x": 0.75457033,
+    "prostate_fraction": 0.42897573,
+    "prostate_centroid_y": 0.56927679,
+    "prostate_centroid_x": 0.64830831,
+    "needle_and_prostate_fraction": 0.05412325,
+    "prompt_age": 0.8027458,
+    "prompt_psa": 0.2248182,
+    "prompt_approx_psa_density": 0.22444593,
+    "prompt_base_apex_encoding": 0.0,
+    "prompt_mid_lateral_encoding": 0.02416918
+   }
+  }
+ },
+ "optimum": {
+  "centers": [
+   "OL",
+   "UA"
+  ],
+  "cores": {
+   "n": 1587,
+   "sha256": "7306c46e9ade0fedd8614551542af87f884fdc3a35fc1d5798880f4b5b219d4b"
+  },
+  "patients": {
+   "n": 113,
+   "sha256": "7d64930031fb4c8947824d160767d10c9e3fdc4179c4d67f0d0f5804b7802ad8"
+  },
+  "digest": {
+   "bmode_mean": 0.24609535,
+   "bmode_top_minus_bottom": 0.10869553,
+   "needle_fraction": 0.02791064,
+   "needle_centroid_y": 0.47217479,
+   "needle_centroid_x": 0.71722094,
+   "prostate_fraction": 0.40124119,
+   "prostate_centroid_y": 0.45311985,
+   "prostate_centroid_x": 0.61805863,
+   "needle_and_prostate_fraction": 0.02287276,
+   "prompt_age": 0.81718552,
+   "prompt_psa": 0.27715455,
+   "prompt_approx_psa_density": 0.20504372,
+   "prompt_base_apex_encoding": 0.39004411,
+   "prompt_mid_lateral_encoding": -0.33207309
+  }
+ },
+ "pu": {
+  "centers": [
+   "PU"
+  ],
+  "cores": {
+   "n": 566,
+   "sha256": "fec3fb237898d849414703a2884707143e1bffe86481560271702a0c32a9e842"
+  },
+  "patients": {
+   "n": 42,
+   "sha256": "4d230cdabb45fda119e158a22cca4c1b46ade551fea27ad13e7775992327a0c8"
+  },
+  "digest": {
+   "bmode_mean": 0.40723785,
+   "bmode_top_minus_bottom": 0.14321758,
+   "needle_fraction": 0.02542168,
+   "needle_centroid_y": 0.39428869,
+   "needle_centroid_x": 0.40995031,
+   "prostate_fraction": 0.46549292,
+   "prostate_centroid_y": 0.41302548,
+   "prostate_centroid_x": 0.47738833,
+   "needle_and_prostate_fraction": 0.02369803,
+   "prompt_age": 0.82430559,
+   "prompt_psa": 0.31516198,
+   "prompt_approx_psa_density": 0.20504372,
+   "prompt_base_apex_encoding": 0.86572438,
+   "prompt_mid_lateral_encoding": -0.75618375
+  }
+ },
+ "reported_subsets": {
+  "nct": {
+   "cores": 6588,
+   "patients": 693
+  },
+  "optimum": {
+   "cores": 1460,
+   "patients": 111
+  },
+  "pu": {
+   "cores": 558,
+   "patients": 42
+  }
+ }
+}

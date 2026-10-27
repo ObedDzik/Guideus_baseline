@@ -7,6 +7,14 @@ ultrasound–histopathology alignment loss (needle-pooled ABMIL), optionally wit
 The code is a standalone extract of the GuideUS baseline from a larger research codebase: `projects/baseline_methods/guideus/`
 plus only the `medAI` library modules it uses (`medAI/`), and one model file from `projects/medibot/`.
 
+## Lab benchmark runs: read `projects/baseline_methods/guideus/benchmark/README.md` first
+
+To add GuideUS as a row of the lab's core-level benchmark (NCT2013 five-fold cross-validation, zero-shot OPTIMUM OL+UA
+and PU, three-class head, csPCa = GG ≥ 3), train with `guideus_cfg_benchmark_nct.yaml`, export with
+`benchmark/export.py` and verify with `benchmark/check_export.py`, exactly as described there. The two-stage
+NCT → OPTIMUM recipe and the evaluation script described below are not comparable with the benchmark rows (they
+fine-tune on OPTIMUM, use different preprocessing for OPTIMUM/PU and define csPCa as GG ≥ 2).
+
 ## Layout
 
 ```

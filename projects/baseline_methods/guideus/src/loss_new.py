@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 from typing import Callable
 import torch
 from torch import nn
@@ -155,15 +156,21 @@ class ProportionBCE(nn.Module):
         self.entropy_penalty_lambda = entropy_penalty_lambda
 
     def forward(self, bag_of_logits, true_prop):
-        probs = bag_of_logits.sigmoid()
-        pred_prob = probs.mean()
-
-        loss = -true_prop * pred_prob.log() - (1 - true_prop) * (1 - pred_prob).log()
+        # 2026-10-27 (benchmark protocol): same loss value as before, computed in FP32 log space. Under AMP the old
+        # form took log(1 - p) and p * log(p) of FP16 probabilities, which give inf/NaN once a bag saturates; this is
+        # the form used by the benchmark's retrained ProstNFound+ / Prost-RL baselines.
+        logits = bag_of_logits.float().reshape(-1)
+        target = true_prop.to(device=logits.device, dtype=torch.float32)
+        log_count = math.log(logits.numel())
+        log_pred_prob = torch.logsumexp(F.logsigmoid(logits), dim=0) - log_count
+        log_one_minus_pred_prob = torch.logsumexp(F.logsigmoid(-logits), dim=0) - log_count
+        loss = -(target * log_pred_prob + (1.0 - target) * log_one_minus_pred_prob)
+        probs = torch.sigmoid(logits)
 
         if self.l1_penalty_lambda:
             loss = loss + self.l1_penalty_lambda * probs.abs().sum()
         if self.entropy_penalty_lambda:
-            entropy = -probs * probs.log() - (1 - probs) * (1 - probs).log()
+            entropy = F.softplus(logits) - logits * probs  # binary entropy of sigmoid(logits)
             loss = loss + self.entropy_penalty_lambda * entropy.mean()
 
         return loss
@@ -288,9 +295,12 @@ class MaskedPredictionModule(nn.Module):
 
 
 class ImageLevelClassificationLoss(nn.Module):
-    def __init__(self, mode):
+    def __init__(self, mode, class_weight=None):
+        """class_weight: None (plain CE) or "balanced": per-batch weights n / (n_classes * count[class]) for the
+        classes present in the batch, as in the benchmark's ProstNFound+ / Prost-RL retrains."""
         super().__init__()
         self.mode = mode
+        self.class_weight = class_weight
 
     def forward(self, data):
         """
@@ -304,14 +314,22 @@ class ImageLevelClassificationLoss(nn.Module):
 
         if self.mode == "pca":
             labels = data["label"].to(logits.device)
-        elif self.mode == "gg3":   # 2026-10-25: 3 classes, 0 = GG0, 1 = GG1-2, 2 = GG>=3 (needs class_output_dim: 3)
+        elif self.mode in ("gg3", "three_class"):   # 2026-10-25: 3 classes, 0 = GG0, 1 = GG1-2, 2 = GG>=3 (needs class_output_dim: 3)
             gg = data["grade_group"].to(logits.device)
             labels = (gg >= 1).long() + (gg >= 3).long()
         else:
             labels = (data["grade_group"] > 2).long().to(logits.device)
 
-        # Compute the binary cross-entropy loss
-        loss = F.cross_entropy(logits, labels)
+        weight = None
+        if self.class_weight == "balanced":
+            num_classes = logits.shape[-1]
+            present, counts = torch.unique(labels, return_counts=True)
+            weight = torch.ones(num_classes, device=logits.device)
+            weight[present] = labels.numel() / (num_classes * counts.float())
+        elif self.class_weight is not None:
+            raise ValueError(f"Unknown image_clf_class_weight: {self.class_weight!r}")
+
+        loss = F.cross_entropy(logits.float(), labels, weight=weight)
 
         return loss
 
@@ -449,7 +467,8 @@ def build_loss(args):
 
     if args.add_image_clf:
         print(f"Adding image-level classification loss: {args.add_image_clf}")
-        losses.append(ImageLevelClassificationLoss(mode=args.image_clf_mode))
+        losses.append(ImageLevelClassificationLoss(mode=args.image_clf_mode,
+                                                   class_weight=args.get('image_clf_class_weight', None)))
 
     # if args.outside_prostate_penalty:
     #     print("Adding outside prostate penalty loss.")

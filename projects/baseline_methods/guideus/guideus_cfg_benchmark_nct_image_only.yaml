@@ -1,0 +1,148 @@
+# LAB BENCHMARK RUN, OPTIONAL IMAGE-ONLY VARIANT (2026-10-27): identical to guideus_cfg_benchmark_nct.yaml except that no
+# clinical prompt is used anywhere (model_kw.prompts: []). Run it only after the primary five folds are exported.
+# Read projects/baseline_methods/guideus/benchmark/README.md first. benchmark_protocol makes the trainer refuse any
+# change to the split, selection or recipe keys (benchmark/protocol.py); do not edit them for the main row.
+#
+# = guideus_cfg0_nct_prompt_gg3.yaml (GUIDE-US: ProstNFound + needle-pooled ABMIL + triplet alignment to PANDA
+#   embeddings, three-class image head) with the recipe of the benchmark's retrained ProstNFound+ baseline:
+#   256-px input / 64-px masks, prompts age+PSA+PSAD+core location, MedSAM's pretrained mask-decoder upsampler,
+#   balanced three-class CE, AdamW 2e-5 / 1e-5 (encoder) / 5e-5 (warm-up), 1 warm-up epoch, wd 1e-3, batch 8,
+#   35 epochs, seed 30, checkpoint selected on NCT validation high-involvement AUROC.
+benchmark_protocol: image_only
+fold: 0
+weight: 0.2_H_0.8_M
+pr_train_mode: us_histo
+train_mode: ${pr_train_mode}
+run_name: guideus_benchmark_nct_image_only_${fold}
+base_dir: /scratch/obed
+chkpt_dir: /${oc.env:JOB_ID} #dummy
+model_type: medsam
+experiment_type: guideus
+
+# GUIDE-US histopathology teacher (training only; never needed at inference or export).
+histo_emb_dir: /project/6106383/shared/radboud_gigaembeds
+mri_emb_dir: /home/obed/projects/aip-medilab/shared/mri_only_embeddings_dino
+hist_csv: /project/aip-medilab/shared/metadata_usalign/clean_labels_with_cancer_pct.csv
+mri_csv: /project/aip-medilab/shared/picai/manifests/slices_manifest.csv
+freeze_encoder: False
+restrict_test: False
+
+use_acmil: False
+acmil_mask_drop_prob: 0.0
+acmil_n_branches: 3
+supcon_only: False
+propbce: False
+loss_type: triplet
+loss_type_reg: null
+lambda_cross: 0.0
+lambda_within: 1.0
+lambda_mri: 0.0
+normalize: False
+use_mmd: False
+lambda_mmd: 0.0
+no_per_grade: 5
+
+data_provider: radboud
+proj_dim: 768
+hidden_dim: 512
+input_dim: 256
+
+lambda_aem: 0.1
+lambda_supcon: 0.5
+bank_size: 128
+neg_strength: 1.0
+domain_weight: 1.0
+test_tracked_metric: linear_probe/macro_auc
+test_save_best_weights: True
+
+data:
+  dataset: nct
+  root_dir_c23: /datasets/exactvu_pca/OPTIMUM/processed/UA_annotated_needles
+  root_dir_c3: /datasets/exactvu_pca/OPTIMUM/UA_OL_PU_annotated_needles_multiframe
+  # NCT2013 only. OPTIMUM and PU are external test cohorts: never in training, validation or selection.
+  include_nct: true
+  include_optimum_c23: false
+  include_optimum_c3: false
+  include_pu_in_train: false
+  fold: ${fold}
+  optimum_center: OL
+  n_folds: 5
+  test_center: null
+  exclude_benign_cores_from_positive_patients: true
+  involvement_threshold_pct: null
+  undersample_benign_ratio: null
+  cohort_selection_mode: kfold
+  batch_size: 8
+  num_workers: 8
+  augmentations: translate
+  image_size: 256
+  first_downsample_size: null
+  mask_size: 64
+  limit_train_data: null
+  mean: [0, 0, 0]
+  std: [1, 1, 1]
+  flip_ud: false
+  frames: first
+  crop_to_prostate: false
+  rf_as_bmode: false
+  include_rf: false
+  train_subsample_seed: 42
+  histo_emb_dir: ${histo_emb_dir}
+  mri_emb_dir: ${mri_emb_dir}
+  hist_csv: ${hist_csv}
+  mri_csv: ${mri_csv}
+  hist_data_provider: ${data_provider}
+  samples_per_grade: ${no_per_grade}
+
+model: prostnfound_adapter_medsam_legacy
+model_kw:
+  use_class_decoder: true
+  class_output_dim: 3                  # benign / GG1-2 / GG>=3
+  prompts: []                         # image only
+  backbone_kw:
+    mask_decoder_kw:
+      output_upscaling_version: default  # MedSAM's pretrained upsampler, as in every benchmark MedSAM baseline
+
+loss: mil_prop_bce_entropy_reg
+outside_prostate_penalty: false
+add_image_clf: True
+image_clf_mode: gg3                    # 0 = GG0, 1 = GG1-2, 2 = GG>=3
+image_clf_class_weight: balanced
+optimizer: adamw
+lr: 2.0e-05
+encoder_lr: 1.0e-05
+warmup_lr: 5.0e-05
+cnn_lr: 1.0e-05
+warmup_epochs: 1
+wd: 1.0e-03
+epochs: 35
+accumulate_grad_steps: 1
+cutoff_epoch: null
+
+run_test: false
+test_every_epoch: false
+run_val: true
+
+project: miccai2024_comparison
+seed: 30
+# heatmap all-cancer AUROC on benign + >40%-involvement cores of the NCT validation fold (the benchmark's selection rule)
+tracked_metric: val/auc_high_involvement
+
+save_checkpoint_wandb: false
+torch_compile: false
+use_amp: true
+device: cuda
+checkpoint_dir: ${base_dir}/guideus_baseline/${run_name}/${chkpt_dir}
+model_checkpoint: null                 # start from MedSAM, never from an OPTIMUM-trained checkpoint
+debug: false
+save_best_weights: True
+
+evaluator:
+  log_images: false
+  log_images_every: 100
+
+wandb:
+  run_name: ${run_name}
+  project: guideus_baseline
+  group: guideus_benchmark_nct_image_only
+job_id: 0

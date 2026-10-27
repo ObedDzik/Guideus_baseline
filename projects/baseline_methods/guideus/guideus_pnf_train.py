@@ -737,6 +737,10 @@ def main(cfg):
     )
     if cfg.debug:
         cfg.name = "debug"
+    if cfg.get("benchmark_protocol") is not None:
+        # Lab benchmark run (benchmark/README.md): refuse any config that breaks the split/recipe rules.
+        from projects.baseline_methods.guideus.benchmark.protocol import check_training_config
+        logging.info(f"Benchmark protocol variant: {check_training_config(cfg)}")
 
     wandb.init(project=cfg.wandb.project, name=cfg.wandb.run_name,
                config=OmegaConf.to_object(cfg))
@@ -748,6 +752,8 @@ def main(cfg):
 
     if cfg.checkpoint_dir is not None:
         os.makedirs(cfg.checkpoint_dir, exist_ok=True)
+        # resolved run config next to best.pth; benchmark/export.py checks it against the config it is given
+        OmegaConf.save(cfg, os.path.join(cfg.checkpoint_dir, "config.yaml"), resolve=True)
 
     # ---- one CSV per run; concat across runs to build every dynamics figure ----
     recorder = DiagRecorder(
@@ -802,6 +808,15 @@ def main(cfg):
     criterion = build_loss(cfg)                   # noqa: F821
     loaders = get_dataloaders(cfg.data, mode="train")   # noqa: F821
     train_loader, val_loader = loaders["train"], loaders["val"]
+    benchmark = None
+    if cfg.get("benchmark_protocol") is not None:
+        # The cores actually loaded must be the benchmark NCT fold; the record goes into every checkpoint.
+        from projects.baseline_methods.guideus.benchmark.protocol import training_manifest
+        benchmark = dict(config=OmegaConf.to_container(cfg, resolve=True), manifest=training_manifest(cfg, loaders))
+        logging.info(f"Benchmark manifest: {benchmark['manifest']}")
+        if cfg.checkpoint_dir is not None:
+            with open(os.path.join(cfg.checkpoint_dir, "benchmark_manifest.json"), "w") as f:
+                json.dump(benchmark["manifest"], f, indent=1)
     optimizer, lr_scheduler = setup_optimizer(cfg, model, train_loader)   # noqa: F821
 
     if state is not None:
@@ -824,7 +839,7 @@ def main(cfg):
     print("!!!!!!!!! model return dict state: ", model.return_dict)
 
     def get_state():
-        return {
+        state = {
             "model": model.state_dict(),
             "optimizer": optimizer.state_dict(),
             "epoch": epoch,
@@ -834,6 +849,9 @@ def main(cfg):
             "lr_scheduler": lr_scheduler.state_dict(),
             "args": vars(cfg),
         }
+        if benchmark is not None:
+            state["benchmark"] = benchmark
+        return state
 
     def save_checkpoint(name):
         state = get_state()
@@ -848,6 +866,7 @@ def main(cfg):
                 )
 
     best_score = 0.0
+    best_epoch, epochs_run = None, 0
     for epoch in range(cfg.epochs):
         if cfg.cutoff_epoch is not None and epoch > cfg.cutoff_epoch:
             break
@@ -858,14 +877,24 @@ def main(cfg):
         )
         if cfg.run_val:
             val_metrics = run_eval_epoch(cfg, model, val_loader, epoch, X, y, desc="val")
+            if cfg.tracked_metric not in val_metrics:
+                raise KeyError(f"tracked_metric {cfg.tracked_metric!r} not among validation metrics: "
+                               f"{sorted(k for k in val_metrics if k.startswith('val/'))}")
             tracked = val_metrics.get(cfg.tracked_metric)
             if tracked is not None and tracked > best_score:
                 best_score = tracked
+                best_epoch = epoch
                 logging.info(f"New best score: {best_score}")
                 if cfg.save_best_weights:
                     save_checkpoint("best.pth")
+        epochs_run = epoch + 1
 
     recorder.flush()
+    if benchmark is not None and cfg.checkpoint_dir is not None:
+        # benchmark/export.py requires this record: the full schedule ran and best.pth is the selected epoch
+        with open(os.path.join(cfg.checkpoint_dir, "training_complete.json"), "w") as f:
+            json.dump(dict(completed=epochs_run == cfg.epochs, epochs_run=epochs_run, epochs=cfg.epochs,
+                           best_epoch=best_epoch, best_score=float(best_score), tracked_metric=cfg.tracked_metric), f, indent=1)
     logging.info("Finished training")
 
 
