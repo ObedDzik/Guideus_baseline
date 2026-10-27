@@ -272,12 +272,27 @@ on the whole external cohorts), with paired patient-cluster bootstrap comparison
   keys (for example `data.image_size: 512` with `data.mask_size: 128`) and describe the change in the hand-over. The
   split rules are still enforced. Reported only as a secondary row.
 
-## Known open question: PU orientation
+## PU orientation (checked): no extra flip
 
 Comments elsewhere in this repository state that PU frames on disk are oriented opposite to UA/OL and need one more
-flip (`pu_extra_flip`). Every row of the benchmark, including all baselines, was scored with the same `probe_top` flip
-for OL, UA and PU. Keep it for GUIDE-US so that the rows stay comparable. If you have evidence that PU is
-mis-oriented, report it to the benchmark maintainers; fixing it would mean re-scoring every row, not only GUIDE-US.
+flip (`pu_extra_flip`). We checked this on all 566 PU cores, and it is not the case: PU frames are stored the same way
+up as OL and UA, and the single `probe_top` flip used for every benchmark row is correct for PU.
+
+- In PU only the needle is transperineal; the imaging probe is still transrectal. After the `probe_top` flip the
+  gland lies against the probe edge, as in NCT2013, OL and UA (on average its first row is at 5% of the image height;
+  NCT2013 15%, OL 14%, UA 8%).
+- The brightness-by-depth profile of PU after the flip correlates 0.96 with that of the NCT2013 training frames (OL+UA:
+  0.94); with the extra flip it correlates −0.96, i.e. the far field is where the probe should be.
+- The ExactVu display overlay (black box) sits in the same image corner for OL, UA and PU after the flip; the extra flip
+  moves it for PU only.
+- A diagnostic check with an existing NCT-trained baseline confirmed it: with the extra flip its PU discrimination
+  fell below chance.
+
+The needle explains the other conclusion: a transperineal needle runs roughly horizontally from the side of the image
+instead of diagonally from the probe, so judging orientation from the needle mask makes PU look upside down. Models
+fine-tuned on PU can adapt to either orientation, which is why it did not matter in the earlier runs; for a model
+trained on NCT2013 only it does. Do not use `pu_extra_flip` (or any other PU-specific flip) for benchmark runs; the
+exporter applies the benchmark orientation and its input digest would reject a flipped PU cohort.
 
 ## Files
 
