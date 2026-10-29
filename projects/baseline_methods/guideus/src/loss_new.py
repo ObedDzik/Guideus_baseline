@@ -160,6 +160,10 @@ class ProportionBCE(nn.Module):
         # form took log(1 - p) and p * log(p) of FP16 probabilities, which give inf/NaN once a bag saturates; this is
         # the form used by the benchmark's retrained ProstNFound+ / Prost-RL baselines.
         logits = bag_of_logits.float().reshape(-1)
+        if logits.numel() == 0:
+            # 2026-10-29: empty needle-x-prostate bag (~0.3% of NCT cores at 64 px) contributes nothing, as in the
+            # benchmark's ProstNFound+ / Prost-RL retrains. The original form returned NaN (AMP skipped the whole step).
+            return logits.sum()
         target = true_prop.to(device=logits.device, dtype=torch.float32)
         log_count = math.log(logits.numel())
         log_pred_prob = torch.logsumexp(F.logsigmoid(logits), dim=0) - log_count
@@ -469,6 +473,11 @@ def build_loss(args):
         print(f"Adding image-level classification loss: {args.add_image_clf}")
         losses.append(ImageLevelClassificationLoss(mode=args.image_clf_mode,
                                                    class_weight=args.get('image_clf_class_weight', None)))
+        # 2026-10-29: SumLoss zips losses with names, so without these two lines the classification loss was silently
+        # dropped and the image-level head never trained. Weight 1, as in ProstNFound+ / Prost-RL.
+        weights.append(1)
+        names.append('image_clf')
+    assert len(losses) == len(weights) == len(names), (len(losses), len(weights), len(names))
 
     # if args.outside_prostate_penalty:
     #     print("Adding outside prostate penalty loss.")

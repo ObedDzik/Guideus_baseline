@@ -112,6 +112,13 @@ def _build_hist_mri_groups(hist_csv: str, mri_csv: str, data_provider: str):
     hist_df = pd.read_csv(hist_csv)
     # hist_df = hist_df[hist_df["data_provider"] == "karolinska"]
     hist_df = hist_df[hist_df["data_provider"] == data_provider]
+    # 2026-10-29: PANDA cancer_percentage is a fraction (0-1), while MergedDataset._select_hist compares it with the
+    # ultrasound core's pct_cancer in percent (+/-15, then +/-30 points). Without this conversion the involvement match
+    # never selected anything (positives were any same-grade slide), unlike the paper's "same ISUP grade and
+    # involvement bin". Slides without a cancer percentage stay NaN and are only used by the all-slides fallback.
+    pct = hist_df["cancer_percentage"]
+    assert pct.dropna().between(0, 1).all(), "expected PANDA cancer_percentage as a fraction in [0, 1]"
+    hist_df = hist_df.assign(cancer_percentage=pct * 100.0)
 
     mri_df = pd.read_csv(mri_csv)
     mri_df = mri_df[
