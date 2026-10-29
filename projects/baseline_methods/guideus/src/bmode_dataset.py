@@ -215,7 +215,10 @@ class BModeDatasetV2(Dataset):
         self.metadata = self.metadata[self.metadata.core_id.isin(core_ids)]
         self._indices = []
         self.core_ids = core_ids
-        self.df= pd.read_csv("/project/aip-medilab/shared/metadata_usalign/metadata.csv")
+        # 2026-10-29: was a hard-coded Killarney copy (/project/aip-medilab/shared/metadata_usalign/metadata.csv). It is only
+        # read for a per-core existence check and grade records of an unused sampler; every returned field comes from
+        # data_accessor's metadata, so use that same table.
+        self.df = data_accessor.get_metadata_table().copy()
         for i, core_id in enumerate(tqdm(self.core_ids, desc="Loading dataset")):
             if frames == "first":
                 self._indices.append((i, 0))
